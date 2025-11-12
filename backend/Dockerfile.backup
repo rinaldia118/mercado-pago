@@ -1,0 +1,29 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copiar package.json
+COPY package.json ./
+
+# Instalar TODAS las dependencias (incluyendo devDependencies para compilar TypeScript)
+# Si hay package-lock.json, npm ci será más rápido y confiable
+COPY package-lock.json* ./
+RUN if [ -f package-lock.json ]; then \
+      npm ci; \
+    else \
+      npm install; \
+    fi
+
+# Copiar el resto del código
+COPY . .
+
+# Compilar TypeScript
+RUN npm run build
+
+# Eliminar devDependencies después de compilar (opcional, para reducir tamaño de imagen)
+RUN npm prune --production
+
+EXPOSE 3001
+
+CMD ["npm", "start"]
+
